@@ -1,0 +1,68 @@
+#Script presentate by Nishikant, Ganesh and Prasad
+#Welcome new comment
+---
+- hosts: all
+  become: true
+  become_user: root
+  
+ 
+  tasks:
+   - name: Install aptitude using apt
+     apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+ 
+   - name: Install required system packages
+     apt: name={{ item }} state=latest update_cache=yes
+     loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'virtualenv', 'python3-setuptools']
+ 
+   - name: Add Docker GPG apt Key
+     apt_key:
+       url: https://download.docker.com/linux/ubuntu/gpg
+       state: present
+ 
+   - name: Add Docker Repository
+     apt_repository:
+       repo: deb https://download.docker.com/linux/ubuntu bionic stable
+       state: present
+ 
+   - name: Update apt and install docker-ce
+     apt: update_cache=yes name=docker-ce state=latest
+
+   - name: check docker version
+     command: dpkg -l docker*
+     register: var4
+   - debug: msg={{ var4.stdout_lines }}
+
+   - name: copy file
+     copy:
+       dest: /root
+       src: /root/dir1/Ansible-Repo-Demo/{{ item }}
+     with_items:
+       - dockerdeploy.yml
+       - lightsail-containers-flask
+   - name: Build Docker image from Dockerfile
+     command: "{{ item }}"
+     with_items:
+          - " docker build -t flask3 /root/lightsail-containers-flask/"
+          -  "docker run -d --name cont2 -p 5000:5000 flask3"
+   - name: check docker image
+     command: docker images
+     register: var1
+   - debug: msg={{ var1.stdout_lines }}
+
+   - name: check docker  container
+     command: docker ps -a
+     register: var2
+   - debug: msg={{ var2.stdout_lines }}
+
+
+
+
+  
+ 
+
+
+
+
+
+
+
